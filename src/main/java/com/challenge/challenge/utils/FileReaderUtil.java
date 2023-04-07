@@ -23,13 +23,11 @@ public final class FileReaderUtil {
 
       return lines;
     } catch (IOException e){
-      e.printStackTrace();
+      return new ArrayList<>();
     }
-
-    return new ArrayList<>();
   }
 
   public static String getFilePath(String file){
-    return String.format("src/main/resources/data/%s", file);
+    return String.format("./%s", file);
   }
 }
