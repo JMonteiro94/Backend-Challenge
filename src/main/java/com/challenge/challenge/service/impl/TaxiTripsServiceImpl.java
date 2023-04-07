@@ -6,18 +6,22 @@ import com.challenge.challenge.domain.enums.TripType;
 import com.challenge.challenge.repository.TripRepository;
 import com.challenge.challenge.repository.ZoneRepository;
 import com.challenge.challenge.service.TaxiTripsService;
+import com.challenge.challenge.service.helper.ParsedTrip;
+import com.challenge.challenge.service.helper.ParsedZone;
+import com.challenge.challenge.service.helper.ZoneComparator;
+import com.challenge.challenge.utils.CsvParser;
 import com.challenge.challenge.utils.FileReaderUtil;
 import com.challenge.challenge.web.dto.response.TopZoneDTO;
 import com.challenge.challenge.web.dto.response.TopZonesDTO;
 import com.challenge.challenge.web.dto.response.TripsDTO;
 import com.challenge.challenge.web.dto.response.ZoneTripsDTO;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
+import java.util.PriorityQueue;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,7 +41,7 @@ public class TaxiTripsServiceImpl implements TaxiTripsService {
   @Override
   public void loadData() {
     log.info("Loading csv files...");
-    HashMap<Long, Zone> zonesMap = loadZones();
+    HashMap<Long, Zone> zonesMap = loadAndSaveZones();
     loadTripsFile(zonesMap);
     log.info("Finished loading csv files...");
   }
@@ -50,49 +54,48 @@ public class TaxiTripsServiceImpl implements TaxiTripsService {
   private void loadYellowTripsData(HashMap<Long, Zone> zonesMap) {
     String greenTrips = FileReaderUtil.getFilePath("yellow_tripdata_2018-01_01-15.csv");
     List<String> tripsLines = FileReaderUtil.readFile(greenTrips);
-    saveTrips(tripsLines, zonesMap, TripType.YELLOW, 7, 8);
+    List<ParsedTrip> parsedTrips = CsvParser.parseYellowTrips(tripsLines);
+    saveTrips(parsedTrips, zonesMap);
+
   }
 
   private void loadGreenTripsData(HashMap<Long, Zone> zonesMap) {
     String greenTrips = FileReaderUtil.getFilePath("green_tripdata_2018-01_01-15.csv");
     List<String> tripsLines = FileReaderUtil.readFile(greenTrips);
-    saveTrips(tripsLines, zonesMap, TripType.GREEN, 5, 6);
+    List<ParsedTrip> parsedTrips = CsvParser.parseGreenTrips(tripsLines);
+    saveTrips(parsedTrips, zonesMap);
   }
 
-  private void saveTrips(List<String> tripsLines, HashMap<Long, Zone> zonesMap, TripType type,
-      int pickupZoneIndex, int dropoffZoneIndex) {
-    tripsLines.forEach(zoneLine -> {
-      String[] splitString = zoneLine.split(",");
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-      LocalDate pickupDate = LocalDate.parse(splitString[1], formatter);
-      LocalDate dropoffDate = LocalDate.parse(splitString[2], formatter);
-      Zone pickupZone = zonesMap.get(Long.parseLong(splitString[pickupZoneIndex]));
-      Zone dropoffZone = zonesMap.get(Long.parseLong(splitString[dropoffZoneIndex]));
+  private void saveTrips(List<ParsedTrip> parsedTrips, HashMap<Long, Zone> zonesMap) {
+    parsedTrips.forEach(parsedTrip -> {
+      Zone pickupZone = zonesMap.get(parsedTrip.getPickupZoneId());
+      pickupZone.incrementPickupTotal();
+      Zone dropoffZone = zonesMap.get(parsedTrip.getDropoffZoneId());
+      dropoffZone.incrementDropoffTotal();
       Trip trip = Trip.builder()
-          .pickupDate(pickupDate)
-          .dropoffDate(dropoffDate)
+          .pickupDate(parsedTrip.getPickupDate())
+          .dropoffDate(parsedTrip.getDropoffDate())
           .pickupZone(pickupZone)
           .dropoffZone(dropoffZone)
-          .type(type)
+          .type(parsedTrip.getType())
           .build();
         tripRepository.save(trip);
     });
   }
 
-  private HashMap<Long, Zone> loadZones(){
+  private HashMap<Long, Zone> loadAndSaveZones(){
     String zonesFilesPath = FileReaderUtil.getFilePath("zones.csv");
     List<String> zonesLines = FileReaderUtil.readFile(zonesFilesPath);
-    return saveZones(zonesLines);
+    List<ParsedZone> parsedZones = CsvParser.parsedZones(zonesLines);
+    return saveZones(parsedZones);
   }
 
-  private HashMap<Long, Zone> saveZones(List<String> zones){
+  private HashMap<Long, Zone> saveZones(List<ParsedZone> parsedZones){
     HashMap<Long, Zone> zonesMap = new HashMap<>();
-    zones.forEach(zoneLine -> {
-      String[] splitString = zoneLine.split(",");
-      long locationId = Long.parseLong(splitString[0]);
+    parsedZones.forEach(parsedZone -> {
       Zone zone = Zone.builder()
-          .locationId(locationId)
-          .title(splitString[2].replace("\"", ""))
+          .locationId(parsedZone.getLocationId())
+          .title(parsedZone.getTitle())
           .build();
       zoneRepository.save(zone);
       zonesMap.put(zone.getLocationId(), zone);
@@ -103,28 +106,25 @@ public class TaxiTripsServiceImpl implements TaxiTripsService {
   @Override
   @Transactional(readOnly = true)
   public TopZonesDTO getTopZones(String order) {
-    ArrayList<TopZoneDTO> topZoneDTOS = new ArrayList<>();
+    PriorityQueue<TopZoneDTO> topFiveZonesQueue = new PriorityQueue<>(5, new ZoneComparator(order));
     List<Zone> zones = zoneRepository.findAll();
     zones.forEach(zone -> {
       TopZoneDTO topZoneDTO = TopZoneDTO.builder()
           .zone(zone.getTitle())
-          .dropoffTotal(zone.getDropoffTrips().size())
-          .pickupTotal(zone.getPickupTrips().size())
+          .dropoffTotal(zone.getDropoffTotal())
+          .pickupTotal(zone.getPickupTotal())
           .build();
-      topZoneDTOS.add(topZoneDTO);
+      topFiveZonesQueue.add(topZoneDTO);
+      if(topFiveZonesQueue.size() > 5){
+        topFiveZonesQueue.poll();
+      }
     });
 
-    List<TopZoneDTO> topFiveZonesSorted = topZoneDTOS.stream()
-        .sorted(((o1, o2) -> {
-          if("dropoffs".equals(order)){
-            return Math.toIntExact(o2.dropoffTotal() - o1.dropoffTotal());
-          }
-          return Math.toIntExact(o2.pickupTotal() - o1.pickupTotal());
-        }))
-        .limit(5)
-        .toList();
+    List<TopZoneDTO> topFiveZones = new ArrayList<>(topFiveZonesQueue.stream().sorted(new ZoneComparator(order)).toList());
+    Collections.reverse(topFiveZones);
+
     return TopZonesDTO.builder()
-        .topZones(topFiveZonesSorted)
+        .topZones(topFiveZones)
         .build();
   }
 

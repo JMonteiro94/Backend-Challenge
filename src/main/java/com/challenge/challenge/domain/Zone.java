@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -41,12 +42,25 @@ public class Zone implements Serializable {
   @Column(name = "title", nullable = false)
   private String title;
 
-  @OneToMany(mappedBy = "pickupZone")
+  @Column(name = "pickupTotal")
+  private long pickupTotal;
+
+  @Column(name = "dropoffTotal")
+  private long dropoffTotal;
+
+  @OneToMany(mappedBy = "pickupZone", fetch = FetchType.LAZY)
   @Exclude
   private List<Trip> pickupTrips;
 
-  @OneToMany(mappedBy = "dropoffZone")
+  @OneToMany(mappedBy = "dropoffZone", fetch = FetchType.LAZY)
   @Exclude
   private List<Trip> dropoffTrips;
 
+  public void incrementPickupTotal(){
+    pickupTotal++;
+  }
+
+  public void incrementDropoffTotal(){
+    dropoffTotal++;
+  }
 }
