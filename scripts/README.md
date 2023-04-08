@@ -2,23 +2,23 @@
 
 - run.sh - small script to run backend-challenge jar and postgres db in docker
 - curl-top-five-zones.sh - to send top five zones request.
-  - command: sh curl-top-five-zones.sh "order" where order can be dropoffs or pickups (if not order is provided or order string is invalid defaults to dropoffs)
+  - command: sh curl-top-five-zones.sh "order" where order can be dropoffs or pickups (if not order is provided or order string is invalid defaults to pickups)
 e.g. 
 ```
 sh curl-top-five-zones.sh dropoffs
 ```
-- curl-zone-trips: to send zone trips request.
+- curl-zone-trips.sh: to send zone trips request.
   - command: sh curl-zone-trips.sh "zone id" "date" where zone id is the zone location id from excel and date should be in format Year-Month-Day
 ```
 sh curl-zone-trips.sh 1 2018-01-12
 ```
-- curl-list-yellow: to send get yellow trips requests with pagination, filter and sort.
+- curl-list-yellow.sh: to send get yellow trips requests with pagination, filter and sort.
   - command: sh curl-list-yellow.sh "date" where date should be in format Year-Month-Day
   ```
-  sh curl-list-yellow.sh
+  sh curl-list-yellow.sh 2018-01-12
   ```
   - More options can be added to this request. For that, customize the curl as follows:
-    - to sort the result append as follows: 
+    - to sort the result append: 
       - for property id use "sort=id"
       - for nested property use "sort=pickupZone_title"
       - for ascending or descending use "sort=id,asc" or "sort=id,desc"
