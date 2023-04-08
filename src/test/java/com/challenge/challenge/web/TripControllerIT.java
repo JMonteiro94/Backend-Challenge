@@ -1,6 +1,5 @@
 package com.challenge.challenge.web;
 
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -63,10 +62,8 @@ class TripControllerIT {
         .perform(get("/list-yellow?date=1900-01-12&page=0&size=10&sort=pickupZone_title").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-        .andExpect(jsonPath("$.content", hasSize(1)))
-        .andExpect(jsonPath("$.content.[*].pickup_zone").value(hasItem("Steinway")))
-        .andExpect(jsonPath("$.content.[*].dropoff_zone").value(hasItems("Steinway")))
-        .andExpect(jsonPath("$.content.[*].pickup_date").value(hasItems("1900-01-12")))
-        .andExpect(jsonPath("$.content.[*].dropoff_date").value(hasItems("1900-01-12")));
+        .andExpect(jsonPath("$.tripsPage.content", hasSize(1)))
+        .andExpect(jsonPath("$.tripsPage.content.[*].pickupDate").value(hasItems("1900-01-12")))
+        .andExpect(jsonPath("$.tripsPage.content.[*].dropoffDate").value(hasItems("1900-01-12")));
   }
 }

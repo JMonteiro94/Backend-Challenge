@@ -1,10 +1,9 @@
 package com.challenge.challenge.service;
 
-import com.challenge.challenge.web.dto.response.TopZonesDTO;
-import com.challenge.challenge.web.dto.response.TripsDTO;
-import com.challenge.challenge.web.dto.response.ZoneTripsDTO;
+import com.challenge.challenge.web.api.dto.TopZonesDTO;
+import com.challenge.challenge.web.api.dto.TripsDTO;
+import com.challenge.challenge.web.api.dto.ZoneTripsDTO;
 import java.time.LocalDate;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface TaxiTripsService {
@@ -15,5 +14,5 @@ public interface TaxiTripsService {
 
   ZoneTripsDTO getZoneTrips(long zone, LocalDate date);
 
-  Page<TripsDTO> getYellowTrips(LocalDate date, Pageable pageable);
+  TripsDTO getYellowTrips(LocalDate date, Pageable pageable);
 }

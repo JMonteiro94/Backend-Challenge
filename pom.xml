@@ -60,6 +60,11 @@
             <optional>true</optional>
             <version>1.18.26</version>
         </dependency>
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>0.2.6</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -67,6 +72,41 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>6.0.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/swagger/api.json</inputSpec>
+                            <generatorName>spring</generatorName>
+                            <apiPackage>com.challenge.challenge.web.api</apiPackage>
+                            <modelPackage>com.challenge.challenge.web.api.dto</modelPackage>
+                            <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
+                            <skipValidateSpec>false</skipValidateSpec>
+                            <configOptions>
+                                <interfaceOnly>true</interfaceOnly>
+                                <serializableModel>true</serializableModel>
+                                <skipDefaultInterface>true</skipDefaultInterface>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <useOptional>false</useOptional>
+                                <delegatePattern>false</delegatePattern>
+                                <additionalModelTypeAnnotations>@lombok.Builder @lombok.NoArgsConstructor @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
+                            </configOptions>
+                            <schemaMappings>
+                                <schemaMapping>Page=org.springframework.data.domain.Page</schemaMapping>
+                            </schemaMappings>
+                            <typeMappings>
+                                <typeMapping>page=Page</typeMapping>
+                            </typeMappings>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

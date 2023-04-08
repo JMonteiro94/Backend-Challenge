@@ -11,10 +11,10 @@ import com.challenge.challenge.service.helper.ParsedZone;
 import com.challenge.challenge.service.helper.ZoneComparator;
 import com.challenge.challenge.utils.CsvParser;
 import com.challenge.challenge.utils.FileReaderUtil;
-import com.challenge.challenge.web.dto.response.TopZoneDTO;
-import com.challenge.challenge.web.dto.response.TopZonesDTO;
-import com.challenge.challenge.web.dto.response.TripsDTO;
-import com.challenge.challenge.web.dto.response.ZoneTripsDTO;
+import com.challenge.challenge.web.api.dto.TopZoneDTO;
+import com.challenge.challenge.web.api.dto.TopZonesDTO;
+import com.challenge.challenge.web.api.dto.TripsDTO;
+import com.challenge.challenge.web.api.dto.ZoneTripsDTO;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -111,8 +111,8 @@ public class TaxiTripsServiceImpl implements TaxiTripsService {
     zones.forEach(zone -> {
       TopZoneDTO topZoneDTO = TopZoneDTO.builder()
           .zone(zone.getTitle())
-          .dropoffTotal(zone.getDropoffTotal())
-          .pickupTotal(zone.getPickupTotal())
+          .doTotal(zone.getDropoffTotal())
+          .puTotal(zone.getPickupTotal())
           .build();
       topFiveZonesQueue.add(topZoneDTO);
       if(topFiveZonesQueue.size() > 5){
@@ -134,17 +134,17 @@ public class TaxiTripsServiceImpl implements TaxiTripsService {
     Optional<Zone> zoneOptional = zoneRepository.findByLocationId(id);
     if(zoneOptional.isPresent()){
       Zone zone = zoneOptional.get();
-      int pickupsTripsOnDate = zone.getPickupTrips().stream()
+      long pickupsTripsOnDate = zone.getPickupTrips().stream()
           .filter(z -> date.isEqual(z.getPickupDate()))
           .toList().size();
-      int dropoffsTripsOnDate = zone.getDropoffTrips().stream()
+      long dropoffsTripsOnDate = zone.getDropoffTrips().stream()
           .filter(z -> date.isEqual(z.getDropoffDate()))
           .toList().size();
       return ZoneTripsDTO.builder()
           .zone(zone.getTitle())
           .date(date.toString())
-          .pickupTotal(pickupsTripsOnDate)
-          .dropoffTotal(dropoffsTripsOnDate)
+          .pu(pickupsTripsOnDate)
+          ._do(dropoffsTripsOnDate)
           .build();
     }
 
@@ -153,13 +153,8 @@ public class TaxiTripsServiceImpl implements TaxiTripsService {
 
   @Override
   @Transactional(readOnly = true)
-  public Page<TripsDTO> getYellowTrips(LocalDate date, Pageable pageable) {
-    return tripRepository.findAllByTypeIsAndDropoffDateOrPickupDate(TripType.YELLOW, date, date, pageable)
-        .map(trip -> TripsDTO.builder()
-            .dropoffDate(trip.getDropoffDate().toString())
-            .pickupDate(trip.getPickupDate().toString())
-            .dropoffZone(trip.getDropoffZone().getTitle())
-            .pickupZone(trip.getPickupZone().getTitle())
-            .build());
+  public TripsDTO getYellowTrips(LocalDate date, Pageable pageable) {
+    Page<Trip> trips = tripRepository.findAllByTypeIsAndDropoffDateOrPickupDate(TripType.YELLOW, date, date, pageable);
+    return TripsDTO.builder().tripsPage(trips).build();
   }
 }

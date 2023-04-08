@@ -1,0 +1,212 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/challenge",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/zone-trips": {
+      "get": {
+        "summary": "Get zone trips summary by zone and date",
+        "operationId": "getZoneTrips",
+        "parameters": [
+          {
+            "name": "zone",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns zone trip summary.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZoneTripsDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/top-zones": {
+      "get": {
+        "summary": "Get top 5 zones by order",
+        "operationId": "getTopZones",
+        "parameters": [
+          {
+            "name": "order",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns list of top zones.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopZonesDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/list-yellow": {
+      "get": {
+        "summary": "Get yellow trips by pagination, sort and date",
+        "operationId": "getYellowTrips",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns list of trips.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripsDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ZoneTripsDTO": {
+        "type": "object",
+        "properties": {
+          "zone": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "pu": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "do": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "TopZoneDTO": {
+        "type": "object",
+        "properties": {
+          "zone": {
+            "type": "string"
+          },
+          "pu_total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "do_total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "TopZonesDTO": {
+        "type": "object",
+        "properties": {
+          "top_zones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopZoneDTO"
+            }
+          }
+        }
+      },
+      "Pageable": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TripsDTO": {
+        "type": "object",
+        "properties": {
+          "tripsPage": {
+            "type": "object",
+            "format": "page"
+          }
+        }
+      },
+      "TripDTO": {
+        "type": "object",
+        "properties": {
+          "pickup_zone": {
+            "type": "string"
+          },
+          "dropoff_zone": {
+            "type": "string"
+          },
+          "pickup_date": {
+            "type": "string"
+          },
+          "dropoff_date": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

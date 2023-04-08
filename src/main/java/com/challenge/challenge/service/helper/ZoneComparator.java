@@ -1,6 +1,6 @@
 package com.challenge.challenge.service.helper;
 
-import com.challenge.challenge.web.dto.response.TopZoneDTO;
+import com.challenge.challenge.web.api.dto.TopZoneDTO;
 import java.util.Comparator;
 
 public class ZoneComparator implements Comparator<TopZoneDTO> {
@@ -14,8 +14,8 @@ public class ZoneComparator implements Comparator<TopZoneDTO> {
   @Override
   public int compare(TopZoneDTO o1, TopZoneDTO o2) {
     if("dropoffs".equals(order)){
-      return Math.toIntExact(o1.dropoffTotal() - o2.dropoffTotal());
+      return Math.toIntExact(o1.getDoTotal() - o2.getDoTotal());
     }
-    return Math.toIntExact(o1.pickupTotal() - o2.pickupTotal());
+    return Math.toIntExact(o1.getPuTotal() - o2.getPuTotal());
   }
 }
